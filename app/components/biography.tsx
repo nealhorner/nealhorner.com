@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Biography() {
   return (
     <section className="space-y-6 text-left">
-      <div className="px-4 text-lg text-zinc-700 dark:text-zinc-300 max-w-full lg:max-w-[90vw] xl:max-w-[80vw] mx-auto">
+      <div className="space-y-2 px-4 text-lg text-zinc-700 dark:text-zinc-300 max-w-full lg:max-w-[90vw] xl:max-w-[80vw] mx-auto">
         <p>
           I&apos;m a geographer, programmer, and analytics leader based in the
           San Francisco Bay Area. This site is a home for projects I&apos;m
