@@ -18,11 +18,8 @@ const footerLinks = [
 export default function Footer() {
   return (
     <footer className="border-t border-zinc-200 py-10 dark:border-zinc-800">
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between gap-6 px-6 text-sm text-zinc-600 sm:flex-row sm:text-base dark:text-zinc-400">
-        <p className="text-center sm:text-left">
-          © {new Date().getFullYear()} Neal Horner. All rights reserved.
-        </p>
-        <nav className="flex items-center gap-6">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
+        <nav className="flex flex-wrap items-center justify-center gap-6">
           {footerLinks.map((link) => (
             <Link
               key={link.label}
@@ -35,6 +32,9 @@ export default function Footer() {
             </Link>
           ))}
         </nav>
+        <p className="text-center">
+          © {new Date().getFullYear()} Neal Horner. All rights reserved.
+        </p>
       </div>
     </footer>
   );
