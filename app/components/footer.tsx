@@ -17,7 +17,7 @@ const footerLinks = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-zinc-200 py-10 dark:border-zinc-800">
+    <footer className="mt-4 pt-4">
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-6 px-6 text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
         <nav className="flex flex-wrap items-center justify-center gap-6">
           {footerLinks.map((link) => (
