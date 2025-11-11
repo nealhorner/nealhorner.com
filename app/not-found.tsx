@@ -8,7 +8,7 @@ export default function NotFound() {
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-neutral-500 dark:text-neutral-400">
           HTTP 404
         </p>
-        <h1 className="text-4xl sm:text-5xl font-semibold text-zinc-900 dark:text-zinc-100">
+        <h1 className="text-4xl sm:text-5xl font-semibold text-stone-900 dark:text-stone-100">
           This page could not be found.
         </h1>
         <p className="text-base text-neutral-600 dark:text-neutral-400">
@@ -25,4 +25,3 @@ export default function NotFound() {
     </main>
   );
 }
-

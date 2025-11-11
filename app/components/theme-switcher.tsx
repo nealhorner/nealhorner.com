@@ -66,9 +66,9 @@ export default function ThemeSwitcher({ className }: ThemeSwitcherProps) {
       aria-label={`Switch to ${isDark ? ThemeType.Light : ThemeType.Dark} theme`}
       className={[
         "inline-flex items-center gap-3 rounded-full border px-3 py-1 text-sm font-medium transition-all",
-        "border-zinc-300 bg-zinc-100 text-zinc-800 hover:bg-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500",
+        "border-stone-300 bg-stone-100 text-stone-800 hover:bg-stone-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-500",
         "disabled:cursor-not-allowed disabled:opacity-60",
-        "dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700 dark:focus-visible:outline-zinc-300",
+        "dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100 dark:hover:bg-stone-700 dark:focus-visible:outline-stone-300",
         className,
       ]
         .filter(Boolean)
@@ -78,8 +78,8 @@ export default function ThemeSwitcher({ className }: ThemeSwitcherProps) {
         aria-hidden
         className={[
           "relative inline-flex h-5 w-10 items-center rounded-full transition-colors",
-          isDark ? "bg-zinc-700" : "bg-amber-300",
-          "dark:bg-zinc-700",
+          isDark ? "bg-stone-700" : "bg-amber-300",
+          "dark:bg-stone-700",
         ]
           .filter(Boolean)
           .join(" ")}
