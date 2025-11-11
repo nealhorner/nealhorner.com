@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   createContext,
@@ -7,15 +7,11 @@ import {
   useEffect,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import type { ReactNode } from "react";
 
-import {
-  DEFAULT_THEME,
-  THEME_STORAGE_KEY,
-  Theme,
-  ThemePreference,
-} from "@/lib/theme";
+import { DEFAULT_THEME, THEME_STORAGE_KEY, Theme, ThemePreference, ThemeType } from "@/lib/theme";
 
 type ThemeContextValue = {
   theme: Theme;
@@ -30,18 +26,51 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function getSystemTheme(): Theme {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  if (typeof window === "undefined") {
+    return ThemeType.Light;
+  }
+
+  try {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? ThemeType.Dark
+      : ThemeType.Light;
+  } catch {
+    return ThemeType.Light;
+  }
 }
 
 function applyThemeToDocument(theme: Theme) {
   const root = document.documentElement;
   root.dataset.theme = theme;
-  root.classList.remove("light", "dark");
+  root.classList.remove(ThemeType.Light, ThemeType.Dark);
   root.classList.add(theme);
-  root.classList.toggle("dark", theme === "dark");
+  root.classList.toggle(ThemeType.Dark, theme === ThemeType.Dark);
   root.style.colorScheme = theme;
+}
+
+function subscribeToSystemTheme(callback: () => void) {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  try {
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      callback();
+    };
+
+    media.addEventListener("change", handleChange);
+
+    return () => {
+      media.removeEventListener("change", handleChange);
+    };
+  } catch {
+    return () => undefined;
+  }
+}
+
+function isTheme(value: unknown): value is Theme {
+  return value === ThemeType.Light || value === ThemeType.Dark;
 }
 
 export type ThemeProviderProps = {
@@ -56,7 +85,11 @@ export function ThemeProvider({
   storageKey = THEME_STORAGE_KEY,
 }: ThemeProviderProps) {
   const [userTheme, setUserTheme] = useState<Theme | null>(null);
-  const [systemTheme, setSystemTheme] = useState<Theme>("light");
+  const systemTheme = useSyncExternalStore(
+    subscribeToSystemTheme,
+    getSystemTheme,
+    () => ThemeType.Light
+  );
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
@@ -64,31 +97,21 @@ export function ThemeProvider({
       return;
     }
 
-    const system = getSystemTheme();
-    setSystemTheme(system);
-
     const stored = window.localStorage.getItem(storageKey);
 
-    if (stored === "light" || stored === "dark") {
-      setUserTheme(stored);
-    } else if (defaultTheme === "light" || defaultTheme === "dark") {
-      setUserTheme(defaultTheme);
-    } else {
-      setUserTheme(null);
-    }
+    const nextTheme: Theme | null = isTheme(stored)
+      ? stored
+      : isTheme(defaultTheme)
+        ? defaultTheme
+        : null;
 
-    setHasMounted(true);
-
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleMediaChange = (event: MediaQueryListEvent) => {
-      const nextSystemTheme = event.matches ? "dark" : "light";
-      setSystemTheme(nextSystemTheme);
-    };
-
-    media.addEventListener("change", handleMediaChange);
+    const timeoutId = window.setTimeout(() => {
+      setUserTheme((current) => (current === nextTheme ? current : nextTheme));
+      setHasMounted(true);
+    }, 0);
 
     return () => {
-      media.removeEventListener("change", handleMediaChange);
+      window.clearTimeout(timeoutId);
     };
   }, [defaultTheme, storageKey]);
 
@@ -97,7 +120,7 @@ export function ThemeProvider({
       return userTheme;
     }
 
-    if (defaultTheme === "light" || defaultTheme === "dark") {
+    if (isTheme(defaultTheme)) {
       return defaultTheme;
     }
 
@@ -122,11 +145,11 @@ export function ThemeProvider({
       applyThemeToDocument(nextTheme);
       setUserTheme(nextTheme);
     },
-    [storageKey],
+    [storageKey]
   );
 
   const toggleTheme = useCallback(() => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    setTheme(theme === ThemeType.Dark ? ThemeType.Light : ThemeType.Dark);
   }, [setTheme, theme]);
 
   const clearUserTheme = useCallback(() => {
@@ -135,10 +158,7 @@ export function ThemeProvider({
     }
 
     window.localStorage.removeItem(storageKey);
-    const fallback =
-      defaultTheme === "light" || defaultTheme === "dark"
-        ? defaultTheme
-        : systemTheme;
+    const fallback = isTheme(defaultTheme) ? defaultTheme : systemTheme;
     applyThemeToDocument(fallback);
     setUserTheme(null);
   }, [defaultTheme, storageKey, systemTheme]);
@@ -153,7 +173,7 @@ export function ThemeProvider({
       clearUserTheme,
       hasMounted,
     }),
-    [clearUserTheme, hasMounted, setTheme, systemTheme, theme, toggleTheme, userTheme],
+    [clearUserTheme, hasMounted, setTheme, systemTheme, theme, toggleTheme, userTheme]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
@@ -168,4 +188,3 @@ export function useTheme() {
 
   return context;
 }
-
