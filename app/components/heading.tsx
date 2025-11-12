@@ -7,7 +7,7 @@ import ThemeSwitcher from "./theme-switcher";
 export default function Heading() {
   const { theme } = useTheme();
 
-  const themeClasses = theme === ThemeType.Dark ? "text-stone-900" : "text-stone-500";
+  const themeClasses = theme === ThemeType.Dark ? "text-stone-100" : "text-stone-900";
 
   return (
     <header className="m-0 py-4">
