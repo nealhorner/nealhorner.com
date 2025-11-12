@@ -27,7 +27,7 @@ export function ProjectCard({ project }: ProjectProps) {
     <Link
       href={project.href}
       className={[
-        "group flex flex-col gap-4 rounded-2xl border p-6 shadow-sm transition hover:scale-125 hover:shadow-md",
+        "group flex flex-col gap-4 rounded-2xl border p-6 shadow-sm transition hover:scale-101 hover:shadow-md",
         themeClasses,
       ].join(" ")}
     >
