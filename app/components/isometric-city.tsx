@@ -122,46 +122,6 @@ export default function IsometricCity() {
 
       walkers = updateWalkers(walkers, basemap, state.originX, state.originY, delta);
 
-      // for (const walker of walkers) {
-      //   walker.progress += walker.speed * delta * walker.direction;
-
-      //   if (walker.progress <= 0 || walker.progress >= 1) {
-      //     const currentTile = walker.direction === 1 ? walker.next : walker.path;
-      //     const neighbors = getRoadNeighbors(basemap, currentTile.x, currentTile.y);
-      //     const target = neighbors[Math.floor(Math.random() * neighbors.length)] ?? walker.path;
-
-      //     walker.path = { ...currentTile };
-      //     walker.next = { ...target };
-      //     walker.direction = Math.random() > 0.25 ? 1 : -1;
-      //     walker.progress = walker.direction === 1 ? 0 : 1;
-      //   }
-
-      //   const currentCenter = tileCenter(
-      //     walker.path.x,
-      //     walker.path.y,
-      //     state.originX,
-      //     state.originY
-      //   );
-      //   const nextCenter = tileCenter(walker.next.x, walker.next.y, state.originX, state.originY);
-
-      //   const t = clamp(walker.progress, 0, 1);
-      //   const posX = currentCenter.x + (nextCenter.x - currentCenter.x) * t;
-      //   const posY = currentCenter.y + (nextCenter.y - currentCenter.y) * t;
-
-      //   walker.trail.unshift({ x: posX, y: posY, life: 1 });
-      //   if (walker.trail.length > 120) {
-      //     walker.trail.length = 120;
-      //   }
-
-      //   for (let i = walker.trail.length - 1; i >= 0; i -= 1) {
-      //     const dot = walker.trail[i];
-      //     dot.life -= delta * 0.45;
-      //     if (dot.life <= 0) {
-      //       walker.trail.splice(i, 1);
-      //     }
-      //   }
-      // }
-
       renderWalkers(context, walkers);
       renderForeground(context, foreground, state.originX, state.originY, tiltX, tiltY);
       animationFrame = requestAnimationFrame(step);
