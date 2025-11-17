@@ -1,5 +1,12 @@
-import { clamp } from "@/lib/utilities";
-import type { CityCell, CityForegroundElement, RoadType, RoadOrientation } from "./city-generator";
+import { clamp, randomChoice } from "@/lib/utilities";
+import type {
+  CityCell,
+  CityForegroundElement,
+  RoadType,
+  RoadOrientation,
+  FountainAnimation,
+} from "./city-types";
+
 import { GRID_WIDTH, GRID_HEIGHT, WALKER_COUNT, getRoadNeighbors } from "./city-generator";
 
 export const TILE_WIDTH = 88;
@@ -45,6 +52,11 @@ export const tileCenter = (x: number, y: number, originX: number, originY: numbe
     y: top.y + TILE_HEIGHT / 2,
   };
 };
+
+export const tileBottom = (x: number, y: number, originX: number, originY: number) => ({
+  x: originX + (x - y) * (TILE_WIDTH / 2),
+  y: originY + (x + y) * (TILE_HEIGHT / 2) + TILE_HEIGHT,
+});
 
 export const tileEdgeCenter = (x: number, y: number, orientation: RoadOrientation) => {
   switch (orientation) {
@@ -169,8 +181,15 @@ const drawBuilding = (
   ctx.fill();
 };
 
-const drawTree = (ctx: CanvasRenderingContext2D, x: number, y: number, height: number) => {
-  const trunkHeight = height * 0.45;
+const drawTree = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  height: number,
+  tiltX: number,
+  tiltY: number
+) => {
+  const trunkHeight = height * 0.45 + tiltX / 2 + tiltY / 4;
 
   ctx.fillStyle = "#4b5563";
   ctx.beginPath();
@@ -197,6 +216,97 @@ const drawTree = (ctx: CanvasRenderingContext2D, x: number, y: number, height: n
   ctx.arc(x, y - trunkHeight - canopyRadius * 0.4, canopyRadius, 0, Math.PI * 2);
   ctx.fillStyle = gradient;
   ctx.fill();
+};
+
+const drawFountainForeground = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  fountainAnimations: FountainAnimation[]
+) => {
+  if (fountainAnimations.length < 200) {
+    x = x + Math.random() - 0.5;
+    fountainAnimations.push({
+      time: 0,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: -1.2 - Math.random() * 0.2,
+      startX: x,
+      startY: y,
+      x,
+      y,
+      color: randomChoice(["#FFFFFF", "#7FC7DF", "#b2ddeb", "#d8eef5"]),
+      opacity: 1,
+    });
+  }
+
+  const gravity = 0.03;
+
+  for (let i = fountainAnimations.length - 1; i >= 0; i--) {
+    const animation = fountainAnimations[i];
+
+    // Update the animation
+    const lastY = animation.y;
+    const lastX = animation.x;
+
+    animation.time++;
+
+    animation.x = animation.startX + animation.vx * animation.time;
+    animation.y =
+      animation.startY +
+      animation.vy * animation.time +
+      0.5 * gravity * animation.time * animation.time;
+    animation.opacity /= 1.025;
+
+    // Remove the animation
+    if (animation.opacity <= 0.1 || animation.y > animation.startY) {
+      fountainAnimations.splice(i, 1);
+    }
+
+    const rotationAngle = Math.atan2(lastY - animation.y, lastX - animation.x);
+
+    // Draw the animation
+    ctx.beginPath();
+    ctx.ellipse(animation.x, animation.y, 1, 1.5, rotationAngle, 0, Math.PI * 2);
+    ctx.globalAlpha = animation.opacity;
+    ctx.fillStyle = animation.color;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  return fountainAnimations;
+};
+
+function drawDot(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
+  ctx.beginPath();
+  ctx.arc(x, y, 2, 0, Math.PI * 2);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+const drawPark = (ctx: CanvasRenderingContext2D, top: { x: number; y: number }) => {
+  const colors = ["rgba(100, 214, 142, 0.85)", "rgba(34, 197, 94, 0.85)"];
+
+  // Number of columns and rows in the grid
+  const gridSections = 12;
+  const halfGridWidth = TILE_WIDTH / gridSections / 2;
+  const halfGridHeight = TILE_HEIGHT / gridSections / 2;
+
+  for (let y = 0; y < gridSections; y++) {
+    for (let x = 0; x < gridSections; x++) {
+      const offsetX = x * -halfGridWidth + y * halfGridWidth;
+      const offsetY = x * halfGridHeight + y * halfGridHeight;
+      ctx.beginPath();
+      ctx.moveTo(top.x + offsetX, top.y + offsetY);
+      ctx.lineTo(top.x - halfGridWidth + offsetX, top.y + halfGridHeight + offsetY);
+      ctx.lineTo(top.x + offsetX, top.y + 2 * halfGridHeight + offsetY);
+      ctx.lineTo(top.x + halfGridWidth + offsetX, top.y + halfGridHeight + offsetY);
+      ctx.closePath();
+      ctx.fillStyle = colors[(x + y) % colors.length];
+      ctx.fill();
+    }
+  }
+
+  //   drawDiamond(ctx, top.x, top.y, parkGradient);
 };
 
 const drawRoadDetails = (
@@ -342,15 +452,7 @@ export const renderBasemap = (
           break;
         }
         case "park": {
-          const parkGradient = ctx.createLinearGradient(top.x, top.y, top.x, top.y + TILE_HEIGHT);
-          parkGradient.addColorStop(0, "rgba(134, 239, 172, 0.95)");
-          parkGradient.addColorStop(1, "rgba(34, 197, 94, 0.85)");
-          drawDiamond(ctx, top.x, top.y, parkGradient);
-          const center = tileCenter(x, y, originX, originY);
-          ctx.fillStyle = "rgba(5, 150, 105, 0.4)";
-          ctx.beginPath();
-          ctx.arc(center.x, center.y, 12, 0, Math.PI * 2);
-          ctx.fill();
+          drawPark(ctx, top);
           break;
         }
         case "grove": {
@@ -404,7 +506,14 @@ export const renderBasemap = (
     for (let x = 0; x < GRID_WIDTH; x += 1) {
       for (let y = 0; y < GRID_HEIGHT; y += 1) {
         const center = tileCenter(x, y, originX, originY);
-        ctx.fillStyle = "black";
+
+        const cell = basemap[y][x];
+
+        if (cell.feature === "road") {
+          ctx.fillStyle = "white";
+        } else {
+          ctx.fillStyle = "black";
+        }
         ctx.fillText(`${x},${y}`, center.x, center.y);
       }
     }
@@ -423,6 +532,7 @@ export const renderForeground = (
 ) => {
   for (const element of foreground) {
     const top = tileTop(element.x, element.y, originX, originY);
+    const center = tileCenter(element.x, element.y, originX, originY);
 
     switch (element.feature) {
       case "building": {
@@ -442,9 +552,18 @@ export const renderForeground = (
             ctx,
             center.x + -6 * (element.groveCount - 1) + i * 14,
             center.y - 2 + i * 2,
-            element.height
+            element.height,
+            tiltX,
+            tiltY
           );
         }
+        break;
+      }
+      case "fountain": {
+        if (!element.fountainAnimations) {
+          break;
+        }
+        drawFountainForeground(ctx, center.x, center.y, element.fountainAnimations);
         break;
       }
     }
