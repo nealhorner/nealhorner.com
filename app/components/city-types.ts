@@ -36,3 +36,40 @@ export type CityForegroundElement = {
   groveCount?: number;
   fountainAnimations?: FountainAnimation[];
 };
+
+type TrailDot = {
+  x: number;
+  y: number;
+  life: number;
+};
+
+export type Walker = {
+  id: number;
+  path: {
+    x: number;
+    y: number;
+  };
+  next: {
+    x: number;
+    y: number;
+  };
+  progress: number;
+  speed: number;
+  direction: 1 | -1;
+  trail: TrailDot[];
+  color: string;
+};
+
+export type RoutingNode = {
+  id: string;
+  x: number;
+  y: number;
+  routingSegmentIds: string[];
+  isExitOrEntrance: boolean;
+};
+
+export type RoutingSegment = {
+  id: string;
+  startNodeId: string;
+  endNodeId: string;
+};
