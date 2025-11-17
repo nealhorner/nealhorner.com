@@ -1,30 +1,5 @@
-import { randomChoice } from "@/lib/utilities";
-
-export type CityFeature = "building" | "road" | "park" | "fountain" | "grove";
-
-export type RoadType =
-  | "four-way-intersection"
-  | "three-way-intersection"
-  | "turn-only"
-  | "through-road"
-  | "dead-end";
-
-export type RoadOrientation = "top-right" | "bottom-right" | "bottom-left" | "top-left";
-
-export type CityCell = {
-  feature: CityFeature;
-  roadType?: RoadType;
-  roadOrientation?: RoadOrientation;
-};
-
-export type CityForegroundElement = {
-  feature: "building" | "grove" | "fountain";
-  x: number;
-  y: number;
-  height?: number;
-  color?: string;
-  groveCount?: number;
-};
+import { randomChoice, randomInt } from "@/lib/utilities";
+import { CityCell, CityForegroundElement, CityFeature } from "./city-types";
 
 export const GRID_WIDTH = 12;
 export const GRID_HEIGHT = 12;
@@ -91,7 +66,10 @@ function createFountain(
   x: number,
   y: number
 ): { background: CityCell; foreground: CityForegroundElement } {
-  return { background: { feature: "fountain" }, foreground: { feature: "fountain", x, y } };
+  return {
+    background: { feature: "fountain" },
+    foreground: { feature: "fountain", x, y, fountainAnimations: [] },
+  };
 }
 
 function createBuilding(
@@ -120,14 +98,37 @@ export const generateCity = () => {
   const foreground: CityForegroundElement[] = [];
   let fountainCount = 0;
 
+  const primaryAvenueX = centerX + randomInt(-2, 1);
+  const primaryAvenueY = centerY + randomInt(-2, 1);
+  const secondaryAvenuesX = [
+    randomInt(0, primaryAvenueX - 3),
+    randomInt(0, primaryAvenueX - 3),
+    randomInt(primaryAvenueX + 3, GRID_WIDTH - 1),
+    randomInt(primaryAvenueX + 3, GRID_WIDTH - 1),
+  ];
+  const secondaryAvenuesY = [
+    randomInt(0, primaryAvenueY - 3),
+    randomInt(0, primaryAvenueY - 3),
+    randomInt(primaryAvenueY + 3, GRID_HEIGHT - 1),
+    randomInt(primaryAvenueY + 3, GRID_HEIGHT - 1),
+  ];
+
   // Generate the city cells
   for (let y = 0; y < GRID_HEIGHT; y += 1) {
     for (let x = 0; x < GRID_WIDTH; x += 1) {
       const distanceToCenter = Math.abs(x - centerX) + Math.abs(y - centerY);
-      const isPrimaryAvenue = x === centerX || y === centerY;
-      const isSecondaryRoad = false && (x % 3 === 0 || y % 4 === 0) && distanceToCenter >= 2;
+      const isPrimaryAvenue = x === primaryAvenueX || y === primaryAvenueY;
+      const isSecondaryRoad =
+        (x === secondaryAvenuesX[0] && y < primaryAvenueY) ||
+        (x === secondaryAvenuesX[1] && y > primaryAvenueY) ||
+        (x === secondaryAvenuesX[2] && y < primaryAvenueY) ||
+        (x === secondaryAvenuesX[3] && y > primaryAvenueY) ||
+        (y === secondaryAvenuesY[0] && x < primaryAvenueX) ||
+        (y === secondaryAvenuesY[1] && x > primaryAvenueX) ||
+        (y === secondaryAvenuesY[2] && x < primaryAvenueX) ||
+        (y === secondaryAvenuesY[3] && x > primaryAvenueX);
 
-      if (isPrimaryAvenue || (isSecondaryRoad && Math.random() > 0.5)) {
+      if (isPrimaryAvenue || isSecondaryRoad) {
         basemap[y][x] = createRoad();
         continue;
       }
@@ -189,7 +190,10 @@ export const generateCity = () => {
             basemap[y][x].roadType = "turn-only";
             if (neighbors[0].x > x && neighbors[0].y === y) {
               basemap[y][x].roadOrientation = "bottom-right";
-            } else if (neighbors[0].x < x && neighbors[0].y === y) {
+            } else if (
+              neighbors[0].x - 1 === neighbors[1].x &&
+              neighbors[0].y === neighbors[1].y - 1
+            ) {
               basemap[y][x].roadOrientation = "top-left";
             } else if (neighbors[0].y < y && neighbors[0].x === x) {
               basemap[y][x].roadOrientation = "top-right";
