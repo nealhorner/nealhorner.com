@@ -1,5 +1,11 @@
 import { randomChoice, randomInt } from "@/lib/utilities";
-import { CityCell, CityForegroundElement, CityFeature } from "./city-types";
+import {
+  CityCell,
+  CityForegroundElement,
+  CityFeature,
+  RoutingNode,
+  RoutingSegment,
+} from "./city-types";
 
 export const GRID_WIDTH = 12;
 export const GRID_HEIGHT = 12;
@@ -81,6 +87,78 @@ function createBuilding(
     background: { feature: "building" },
     foreground: { feature: "building", x, y, height, color: chooseBuildingColor() },
   };
+}
+
+function createRoutingNetwork(cells: CityCell[][]): {
+  nodes: Record<number, RoutingNode>;
+  segments: Record<number, RoutingSegment>;
+} {
+  const nodes: Record<string, RoutingNode> = {};
+  const segments: Record<string, RoutingSegment> = {};
+  const keyToNode = new Map<string, string>();
+  const seenRoads = new Set<string>();
+
+  let nodeIdIncrement = 0;
+  let segmentIdIncrement = 0;
+
+  function crawlRoadNetwork(x: number, y: number) {
+    const neighbors = getRoadNeighbors(cells, x, y);
+    for (const neighbor of neighbors) {
+      const neighborKey = `${neighbor.x},${neighbor.y}`;
+      if (seenRoads.has(neighborKey)) {
+        continue;
+      }
+    }
+  }
+
+  for (let y = 0; y < cells.length; y += 1) {
+    for (let x = 0; x < cells[y].length; x += 1) {
+      const cell = cells[y][x];
+      if (cell.feature === "road") {
+        const roadKey = `${x},${y}`;
+        if (seenRoads.has(roadKey)) {
+          continue;
+        }
+        seenRoads.add(roadKey);
+
+        crawlRoadNetwork(x, y);
+      }
+    }
+  }
+
+  // Reduce segments to single node segments
+  const nodesToCheck = Object.keys(nodes);
+  for (const nodeId in nodesToCheck) {
+    if (nodeId in nodes && nodes[nodeId].routingSegmentIds.length === 2) {
+      // Check that the two segments are in a straight line by checking the coordinates of the nodes
+      const segment1 = segments[nodes[nodeId].routingSegmentIds[0]];
+      const segment2 = segments[nodes[nodeId].routingSegmentIds[1]];
+      const oppositeSegment1Node =
+        segment1.startNodeId !== nodeId ? nodes[segment1.startNodeId] : nodes[segment1.endNodeId];
+      const oppositeSegment2Node =
+        segment2.startNodeId !== nodeId ? nodes[segment2.startNodeId] : nodes[segment2.endNodeId];
+
+      if (
+        oppositeSegment1Node.x === oppositeSegment2Node.x ||
+        oppositeSegment1Node.y === oppositeSegment2Node.y
+      ) {
+        // The two segments are in a straight line
+        // Remove node from nodes and merge segments
+        segment1.startNodeId = oppositeSegment1Node.id;
+        segment1.endNodeId = oppositeSegment2Node.id;
+        oppositeSegment2Node.routingSegmentIds.push(segment1.id);
+
+        // Remove segment2.id from oppositeSegment2Node.routingSegmentIds if it exists
+        const index = oppositeSegment2Node.routingSegmentIds.indexOf(segment2.id);
+        if (index !== -1) {
+          oppositeSegment2Node.routingSegmentIds.splice(index, 1);
+        }
+        delete nodes[nodeId];
+        delete segments[segment2.id];
+      }
+    }
+  }
+  return { nodes, segments };
 }
 
 function createRoad(): CityCell {
