@@ -18,3 +18,13 @@ export function randomChoice<T>(choices: T[]): T {
 export function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
+
+/**
+ * Returns a random integer between a minimum and maximum value.
+ * @param min - The minimum allowed value
+ * @param max - The maximum allowed value
+ * @returns A random integer between min and max, inclusive
+ */
+export function randomInt(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
