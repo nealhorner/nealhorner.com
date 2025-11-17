@@ -276,13 +276,6 @@ const drawFountainForeground = (
   return fountainAnimations;
 };
 
-function drawDot(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
-  ctx.beginPath();
-  ctx.arc(x, y, 2, 0, Math.PI * 2);
-  ctx.fillStyle = color;
-  ctx.fill();
-}
-
 const drawPark = (ctx: CanvasRenderingContext2D, top: { x: number; y: number }) => {
   const colors = ["rgba(100, 214, 142, 0.85)", "rgba(34, 197, 94, 0.85)"];
 
