@@ -5,6 +5,7 @@ import type {
   RoadType,
   RoadOrientation,
   FountainAnimation,
+  Walker,
 } from "./city-types";
 
 import { GRID_WIDTH, GRID_HEIGHT, WALKER_COUNT, getRoadNeighbors } from "./city-generator";
@@ -16,29 +17,6 @@ export const EDGE_CENTER_OFFSET_Y = TILE_HEIGHT / 4;
 const DEBUG = true;
 
 export const WALKER_COLORS = ["#38bdf8", "#f97316", "#a855f7", "#34d399", "#facc15", "#fb7185"];
-
-export type Walker = {
-  id: number;
-  path: {
-    x: number;
-    y: number;
-  };
-  next: {
-    x: number;
-    y: number;
-  };
-  progress: number;
-  speed: number;
-  direction: 1 | -1;
-  trail: TrailDot[];
-  color: string;
-};
-
-export type TrailDot = {
-  x: number;
-  y: number;
-  life: number;
-};
 
 export const tileTop = (x: number, y: number, originX: number, originY: number) => ({
   x: originX + (x - y) * (TILE_WIDTH / 2),
@@ -598,6 +576,7 @@ export const renderWalkers = (ctx: CanvasRenderingContext2D, walkers: Walker[]) 
 export const createWalkers = (city: CityCell[][], originX: number, originY: number): Walker[] => {
   const roadTiles: { x: number; y: number }[] = [];
 
+  // TODO: start on the edges of the city
   for (let y = 0; y < GRID_HEIGHT; y += 1) {
     for (let x = 0; x < GRID_WIDTH; x += 1) {
       if (city[y][x].feature === "road") {
